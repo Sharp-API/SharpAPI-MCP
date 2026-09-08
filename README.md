@@ -1,6 +1,6 @@
 # SharpAPI MCP Server
 
-MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, so an agent can query the market directly instead of being told about it.
+MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
 Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), for HTTP requests.
 
@@ -50,14 +50,14 @@ Claude Desktop (`claude_desktop_config.json`):
 | `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
 | `get_middles` | Two-sided gaps where both bets can win. | any |
 
-Plan gates are the API's, not this server's. A key below the required tier gets the API's own error back rather than a rewritten one, because "403, this key is below Pro" is actionable and paraphrasing it hides that.
+The API enforces plan requirements. The server returns API errors unchanged, including details about the required tier.
 
 There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its own endpoint; the fair number arrives as `fairProbability` on each `get_ev` opportunity.
 
 ## Notes
 
 - Tool errors are returned with `isError` so clients can handle rate limits and plan requirements.
-- Diagnostics go to stderr. stdout is the MCP transport and a stray byte there corrupts the stream.
+- Diagnostics are written to stderr; stdout is reserved for the MCP protocol.
 
 ## License
 
