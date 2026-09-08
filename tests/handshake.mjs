@@ -1,8 +1,7 @@
 // Drive one real MCP handshake over stdio against the built server.
 //
-// The point is not coverage. It is that `tsc` succeeding proves the code
-// compiles, not that the server starts, registers its tools and answers the
-// protocol. A malformed tool schema or a bad import only shows up here.
+// Verify that the built server starts, registers tools, and responds to the
+// protocol. This catches invalid tool schemas and imports beyond compile checks.
 //
 // No network: the handshake and tools/list never call SharpAPI, so this runs
 // with a dummy key.
