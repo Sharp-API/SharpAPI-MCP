@@ -1,15 +1,11 @@
 # Publish @sharp-api/mcp-server to npm.
 #
-# Deliberately mirrors Sharp-API/SharpAPI-TS/.github/workflows/publish.yml,
-# because that is the path that actually works for this org. Two things carried
-# over from its history rather than rediscovered:
+# Use OIDC trusted publishing without NPM_TOKEN. Automation tokens can
+# conflict with package settings that disallow bypassing 2FA. The npm CLI
+# negotiates OIDC; --provenance adds the SLSA attestation.
 #
-#   - Auth is OIDC trusted publishing, NOT an NPM_TOKEN. The TS SDK dropped its
-#     token after v0.4.2 (2026-08-18) when an automation token collided with the
-#     package access mode once that mode disallowed bypass-2FA tokens. The npm
-#     CLI negotiates OIDC itself; --provenance adds the SLSA attestation.
-#   - Trusted publishing requires Node >= 22.14 and npm CLI >= 11.5.1.
-#     The publish job uses Node 22 and upgrades npm to the 11.x line.
+# Trusted publishing requires Node >= 22.14 and npm CLI >= 11.5.1.
+# The publish job uses Node 22 and upgrades npm to the 11.x line.
 #
 # ⚠ npm matches the trusted publisher on the workflow FILENAME. This file must
 # stay named publish.yml, and the connection on npmjs.com must say publish.yml
@@ -41,10 +37,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
-      # npm versions are immutable, so every gate applied before upload is
-      # cheaper than publishing a broken release. This is the same handshake
-      # CI runs: it proves the built server answers initialize and registers
-      # its tools, not merely that it compiles.
+      # Validate the built server before publishing an immutable npm version.
+      # The handshake checks startup, initialization, and tool registration.
       - run: node tests/handshake.mjs
         env:
           SHARPAPI_KEY: test-key-not-used-for-network

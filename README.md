@@ -1,15 +1,15 @@
-# sharpapi-mcp
+# SharpAPI MCP Server
 
-MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, so an agent can query the market directly instead of being told about it.
+MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
-A thin tool layer over [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), which does the HTTP. Nothing here re-implements the transport.
+Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), for HTTP requests.
 
 ## Install
 
-Straight from the repository, which works today:
+Install from GitHub:
 
 ```bash
-npx github:Sharp-API/sharpapi-mcp
+npx github:Sharp-API/SharpAPI-MCP
 ```
 
 The npm package is not published yet. Once it is:
@@ -50,14 +50,14 @@ Claude Desktop (`claude_desktop_config.json`):
 | `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
 | `get_middles` | Two-sided gaps where both bets can win. | any |
 
-Plan gates are the API's, not this server's. A key below the required tier gets the API's own error back rather than a rewritten one, because "403, this key is below Pro" is actionable and paraphrasing it hides that.
+The API enforces plan requirements. The server returns API errors unchanged, including details about the required tier.
 
 There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its own endpoint; the fair number arrives as `fairProbability` on each `get_ev` opportunity.
 
 ## Notes
 
-- Errors come back as tool results with `isError`, not thrown, so a rate limit or tier gate is something the model can see and react to rather than a dead server.
-- Diagnostics go to stderr. stdout is the MCP transport and a stray byte there corrupts the stream.
+- Tool errors are returned with `isError` so clients can handle rate limits and plan requirements.
+- Diagnostics are written to stderr; stdout is reserved for the MCP protocol.
 
 ## License
 

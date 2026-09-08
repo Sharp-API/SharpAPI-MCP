@@ -2,10 +2,9 @@
 /**
  * MCP server for SharpAPI.
  *
- * Exposes the SharpAPI REST surface as Model Context Protocol tools, so an
- * agent can query live odds rather than read about them. A thin tool layer over
- * `@sharp-api/client`, which is the transport and the source of truth for the
- * request shapes; nothing here re-implements HTTP.
+ * Exposes the SharpAPI REST surface as Model Context Protocol tools for
+ * querying live odds. Uses `@sharp-api/client` for HTTP transport and
+ * request types.
  *
  * Auth is `SHARPAPI_KEY` from the environment. There is no way to pass a key as
  * a tool argument, deliberately: tool arguments are model-generated and end up
@@ -43,12 +42,9 @@ if (!apiKey) {
 const client = new SharpAPI(apiKey)
 
 /**
- * Tool results are JSON text. Errors are returned as `isError` content rather
- * than thrown, so the model sees the tier gate or rate limit and can react,
- * instead of the server dying mid-conversation.
- *
- * The message is deliberately the API's own: a 403 on +EV means "this key is
- * below Pro", which is actionable, and inventing our own wording would hide it.
+ * Tool results are JSON text. Errors are returned with `isError` so clients
+ * can handle plan requirements and rate limits. API error messages are
+ * preserved to provide the details needed to handle each failure.
  */
 /**
  * Strip the configured key out of anything about to be returned to the model.
