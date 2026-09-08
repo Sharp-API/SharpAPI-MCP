@@ -14,6 +14,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { SharpAPI } from '@sharp-api/client'
 import { z } from 'zod'
+import { makeRedactor } from './redact.js'
 
 const apiKey = process.env.SHARPAPI_KEY
 
@@ -46,18 +47,9 @@ const client = new SharpAPI(apiKey)
  * can handle plan requirements and rate limits. API error messages are
  * preserved to provide the details needed to handle each failure.
  */
-/**
- * Strip the configured key out of anything about to be returned to the model.
- *
- * Defence in depth behind the startup check above: that check stops the one
- * reproduced leak, this stops any future error path that quotes the key back
- * for a reason nobody has thought of yet. Only `err.message` is ever read, so
- * an attached request object is not serialised either way.
- */
-function redact(text: string): string {
-  if (!apiKey) return text
-  return text.split(apiKey).join('[redacted SHARPAPI_KEY]')
-}
+// Only `err.message` is ever read, so an attached request object is not
+// serialised either way. See src/redact.ts.
+const redact = makeRedactor(apiKey)
 
 async function run<T>(fn: () => Promise<T>) {
   try {

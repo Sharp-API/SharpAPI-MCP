@@ -33,7 +33,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.js",
+    "test": "node tests/handshake.mjs && node tests/keyguard.mjs && node tests/redact.mjs",
     "prepublishOnly": "npm run build",
     "prepare": "npm run build"
   },

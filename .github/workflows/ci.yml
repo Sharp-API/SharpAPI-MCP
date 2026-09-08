@@ -19,20 +19,17 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - name: Type check
         run: npm run typecheck
       - name: Build
         run: npm run build
-      - name: Server starts and speaks MCP
-        # Validate a real stdio handshake and tool registration to catch
-        # startup failures and invalid tool definitions in CI.
-        run: node tests/handshake.mjs
+      # Run the suite via `npm test` rather than naming files here. The
+      # enumerated form is how the redactor went untested: a test file that no
+      # step invoked was invisible, and so was the fact that none existed.
+      # Covers the stdio handshake, the control-character refusal, and the
+      # redactor.
+      - name: Test
+        run: npm test
         env:
           SHARPAPI_KEY: test-key-not-used-for-network
-
-      # Regression test for the reproduced key disclosure. Without this in CI a
-      # future change could reintroduce the leak and nothing would catch it,
-      # which is the whole reason the test was written.
-      - name: Key never leaks into output
-        run: node tests/keyguard.mjs
