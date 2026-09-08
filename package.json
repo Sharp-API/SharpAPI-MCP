@@ -17,10 +17,10 @@
   "author": "SharpAPI <hello@sharpapi.io>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sharp-API/sharpapi-mcp"
+    "url": "https://github.com/Sharp-API/SharpAPI-MCP"
   },
   "homepage": "https://sharpapi.io",
-  "bugs": "https://github.com/Sharp-API/sharpapi-mcp/issues",
+  "bugs": "https://github.com/Sharp-API/SharpAPI-MCP/issues",
   "keywords": [
     "mcp",
     "model-context-protocol",
