@@ -1,0 +1,67 @@
+# Publish @sharp-api/mcp-server to npm.
+#
+# Deliberately mirrors Sharp-API/SharpAPI-TS/.github/workflows/publish.yml,
+# because that is the path that actually works for this org. Two things carried
+# over from its history rather than rediscovered:
+#
+#   - Auth is OIDC trusted publishing, NOT an NPM_TOKEN. The TS SDK dropped its
+#     token after v0.4.2 (2026-08-18) when an automation token collided with the
+#     package access mode once that mode disallowed bypass-2FA tokens. The npm
+#     CLI negotiates OIDC itself; --provenance adds the SLSA attestation.
+#   - OIDC needs npm CLI >= 11.5.1. Node 20 bundles 10.8.2, so npm is upgraded
+#     before publishing, pinned to the 11.x line because npm 12 requires Node
+#     >= 22 which this job does not run.
+#
+# ⚠ npm matches the trusted publisher on the workflow FILENAME. This file must
+# stay named publish.yml, and the connection on npmjs.com must say publish.yml
+# exactly — all fields are case-sensitive. A mismatch surfaces as ENEEDAUTH,
+# which reads like a missing token and is not one.
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  # Dry run: exercises the gate and build without uploading. The publish step
+  # below is guarded on the release event.
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run build
+      # npm versions are immutable, so every gate applied before upload is
+      # cheaper than publishing a broken release. This is the same handshake
+      # CI runs: it proves the built server answers initialize and registers
+      # its tools, not merely that it compiles.
+      - run: node tests/handshake.mjs
+        env:
+          SHARPAPI_KEY: test-key-not-used-for-network
+
+  publish:
+    needs: gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - run: npm install -g npm@11
+      - name: Publish to npm
+        if: github.event_name == 'release'
+        run: npm publish --provenance --access public
