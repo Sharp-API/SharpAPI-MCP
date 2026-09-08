@@ -33,3 +33,9 @@ jobs:
         run: node tests/handshake.mjs
         env:
           SHARPAPI_KEY: test-key-not-used-for-network
+
+      # Regression test for the reproduced key disclosure. Without this in CI a
+      # future change could reintroduce the leak and nothing would catch it,
+      # which is the whole reason the test was written.
+      - name: Key never leaks into output
+        run: node tests/keyguard.mjs
