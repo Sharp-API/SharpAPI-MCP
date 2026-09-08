@@ -17,6 +17,20 @@ import { SharpAPI } from '@sharp-api/client'
 import { z } from 'zod'
 
 const apiKey = process.env.SHARPAPI_KEY
+
+// Reject a key containing control characters before it is ever used as a header
+// value. Node's own `Headers.append` throws on such a value, and its error
+// message QUOTES the value back — which then travels into a tool result and so
+// into the conversation transcript. Caught by an adversarial review that
+// reproduced the leak with a key carrying an embedded CRLF; the realistic
+// trigger is a paste that picked up a trailing newline plus following text.
+if (apiKey && /[\u0000-\u001f\u007f]/.test(apiKey)) {
+  console.error(
+    'SHARPAPI_KEY contains a control character (newline, tab or similar). Re-copy the key with no surrounding whitespace or trailing text.',
+  )
+  process.exit(1)
+}
+
 if (!apiKey) {
   // stderr, not stdout: stdout is the MCP transport and any stray byte there
   // corrupts the protocol stream.
@@ -36,15 +50,28 @@ const client = new SharpAPI(apiKey)
  * The message is deliberately the API's own: a 403 on +EV means "this key is
  * below Pro", which is actionable, and inventing our own wording would hide it.
  */
+/**
+ * Strip the configured key out of anything about to be returned to the model.
+ *
+ * Defence in depth behind the startup check above: that check stops the one
+ * reproduced leak, this stops any future error path that quotes the key back
+ * for a reason nobody has thought of yet. Only `err.message` is ever read, so
+ * an attached request object is not serialised either way.
+ */
+function redact(text: string): string {
+  if (!apiKey) return text
+  return text.split(apiKey).join('[redacted SHARPAPI_KEY]')
+}
+
 async function run<T>(fn: () => Promise<T>) {
   try {
     const out = await fn()
-    return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }] }
+    return { content: [{ type: 'text' as const, text: redact(JSON.stringify(out, null, 2)) }] }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return {
       isError: true,
-      content: [{ type: 'text' as const, text: `SharpAPI request failed: ${msg}` }],
+      content: [{ type: 'text' as const, text: redact(`SharpAPI request failed: ${msg}`) }],
     }
   }
 }

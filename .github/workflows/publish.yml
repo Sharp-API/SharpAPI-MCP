@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
       - run: npm run typecheck
       - run: npm run build
       # npm versions are immutable, so every gate applied before upload is
@@ -49,6 +49,11 @@ jobs:
 
   publish:
     needs: gate
+    # Guard the whole JOB, not just the final step. With the condition only on
+    # the publish step, a workflow_dispatch dry run still granted id-token:write
+    # and still executed dependency install/build code, which could request OIDC
+    # credentials without ever reaching the guarded step.
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -59,9 +64,10 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
       - run: npm run build
-      - run: npm install -g npm@11
+      # Exact version, not the mutable 11.x tag: this step runs with id-token:write.
+      - run: npm install -g npm@11.5.1
       - name: Publish to npm
         if: github.event_name == 'release'
         run: npm publish --provenance --access public
