@@ -1,0 +1,34 @@
+# Resolver reviews, CI validates, Mergify merges. Publishing remains release-gated.
+# A new push may require fresh approval; never bypass GitHub review requirements.
+# Resolver-authored PRs need another reviewer and the protected manual merge path.
+merge_queue:
+  mode: serial
+  max_parallel_checks: 1
+queue_rules:
+- name: reviewed
+  batch_size: 1
+  merge_method: squash
+  update_method: merge
+  branch_protection_injection_mode: queue
+  queue_conditions:
+  - base=main
+  - -draft
+  - approved-reviews-by=sharp-resolver[bot]
+  - -label=do-not-merge
+  - -label=needs-human
+  - -label=maintainer:hold
+  - -label=crew-gate:hold
+  - check-success=build
+  - check-success=CodeQL
+pull_request_rules:
+- name: Queue resolver-approved changes
+  conditions:
+  - base=main
+  - -draft
+  - approved-reviews-by=sharp-resolver[bot]
+  - -label=do-not-merge
+  - -label=needs-human
+  - -label=maintainer:hold
+  - -label=crew-gate:hold
+  actions:
+    queue: {}
