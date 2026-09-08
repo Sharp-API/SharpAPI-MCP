@@ -42,10 +42,18 @@ jobs:
       - run: node tests/handshake.mjs
         env:
           SHARPAPI_KEY: test-key-not-used-for-network
+      # npm versions are immutable: a release that leaks a key cannot be pulled
+      # back, so the regression test gates publishing too.
+      - run: node tests/keyguard.mjs
 
   publish:
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
     needs: gate
+    # The job-level `if:` above (not a step-level one) is load-bearing. With the
+    # condition only on the publish step, a workflow_dispatch dry run still
+    # granted id-token:write and still executed dependency install/build code,
+    # which could request OIDC credentials without ever reaching the guarded
+    # step. #1 added the tag check and this environment gate on top.
     environment: release
     runs-on: ubuntu-latest
     permissions:
@@ -59,7 +67,8 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm install --no-audit --no-fund
       - run: npm run build
-      - run: npm install -g npm@11
+      # Exact version, not the mutable 11.x tag: this step runs with id-token:write.
+      - run: npm install -g npm@11.5.1
       - name: Publish to npm
         if: github.event_name == 'release'
         run: npm publish --provenance --access public
