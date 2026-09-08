@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to commit SHAs rather than mutable tags: a moved upstream tag
+      # could change what runs and what gets published. Same rule applied to
+      # sharpapi-r after its pre-CRAN security review.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+      - run: npm install --no-audit --no-fund
+      - name: Type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Server starts and speaks MCP
+        # A build that compiles but cannot answer initialize is not a working
+        # server. Drive one real handshake over stdio and assert the tools are
+        # registered, so a broken tool definition fails here rather than in
+        # someone's editor.
+        run: node tests/handshake.mjs
+        env:
+          SHARPAPI_KEY: test-key-not-used-for-network

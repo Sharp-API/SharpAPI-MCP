@@ -1,0 +1,31 @@
+{
+  "name": "@sharp-api/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for SharpAPI: live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools",
+  "type": "module",
+  "bin": { "sharpapi-mcp": "dist/index.js" },
+  "main": "./dist/index.js",
+  "files": ["dist"],
+  "engines": { "node": ">=18" },
+  "license": "MIT",
+  "author": "SharpAPI <hello@sharpapi.io>",
+  "repository": { "type": "git", "url": "https://github.com/Sharp-API/sharpapi-mcp" },
+  "homepage": "https://sharpapi.io",
+  "bugs": "https://github.com/Sharp-API/sharpapi-mcp/issues",
+  "keywords": ["mcp", "model-context-protocol", "sports-betting", "odds", "arbitrage", "ev", "sharpapi"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@sharp-api/client": "^0.4.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
