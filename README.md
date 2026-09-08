@@ -6,6 +6,14 @@ A thin tool layer over [`@sharp-api/client`](https://www.npmjs.com/package/@shar
 
 ## Install
 
+Straight from the repository, which works today:
+
+```bash
+npx github:Sharp-API/sharpapi-mcp
+```
+
+The npm package is not published yet. Once it is:
+
 ```bash
 npm install -g @sharp-api/mcp-server
 ```
