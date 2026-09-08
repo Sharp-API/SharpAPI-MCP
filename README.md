@@ -1,15 +1,15 @@
-# sharpapi-mcp
+# SharpAPI MCP Server
 
 MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, so an agent can query the market directly instead of being told about it.
 
-A thin tool layer over [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), which does the HTTP. Nothing here re-implements the transport.
+Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), for HTTP requests.
 
 ## Install
 
-Straight from the repository, which works today:
+Install from GitHub:
 
 ```bash
-npx github:Sharp-API/sharpapi-mcp
+npx github:Sharp-API/SharpAPI-MCP
 ```
 
 The npm package is not published yet. Once it is:
@@ -56,7 +56,7 @@ There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its
 
 ## Notes
 
-- Errors come back as tool results with `isError`, not thrown, so a rate limit or tier gate is something the model can see and react to rather than a dead server.
+- Tool errors are returned with `isError` so clients can handle rate limits and plan requirements.
 - Diagnostics go to stderr. stdout is the MCP transport and a stray byte there corrupts the stream.
 
 ## License
