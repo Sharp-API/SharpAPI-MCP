@@ -9,7 +9,7 @@ import { spawn } from 'node:child_process'
 
 const EXPECTED = [
   'list_sports', 'list_sportsbooks', 'list_events', 'get_odds',
-  'get_best_odds', 'get_arbitrage', 'get_ev', 'get_middles',
+  'get_best_odds', 'get_arbitrage', 'get_ev', 'get_middles', 'get_event_odds',
 ]
 
 const proc = spawn('node', ['dist/index.js'], {

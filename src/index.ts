@@ -95,7 +95,7 @@ server.tool(
 
 server.tool(
   'get_odds',
-  'Get normalized odds across sportsbooks. Returns American and decimal prices plus implied probability, one row per book/market/selection, so prices are directly comparable between books.',
+  'Get normalized odds across sportsbooks. Returns American and decimal prices plus implied probability, one row per book/market/selection, so prices are directly comparable between books. Results are paginated at 100 rows by default; pass the cursor from pagination.next_cursor to fetch the next page when pagination.has_more is true.',
   {
     sport: z.string().optional().describe('Sport id from list_sports'),
     league: z.string().optional(),
@@ -104,8 +104,10 @@ server.tool(
     market: z.string().optional().describe('e.g. "moneyline", "spread", "total"'),
     live: z.boolean().optional().describe('Only in-play markets'),
     limit: z.number().int().positive().max(500).optional(),
+    cursor: z.string().optional().describe('Pagination cursor from a previous response (pagination.next_cursor). Pass this to fetch the next page of results when pagination.has_more is true.'),
+    player_name: z.string().optional().describe('Filter to one player. Full name, case-insensitive exact match — "Travis Kelce" matches, "Kelce" does not. Only appears on player-prop markets.'),
   },
-  async (args) => run(() => client.odds.get(args)),
+  async (args) => run(() => client.odds.get(args as Parameters<typeof client.odds.get>[0])),
 )
 
 server.tool(
@@ -158,6 +160,35 @@ server.tool(
     limit: z.number().int().positive().max(500).optional(),
   },
   async (args) => run(() => client.middles.get(args)),
+)
+
+// Base URL for direct fetch calls where the SDK has no typed method.
+// Mirrors the SDK's own DEFAULT_CONFIG.baseUrl; can be overridden via env for testing.
+const _baseUrl = process.env.SHARPAPI_BASE_URL || 'https://api.sharpapi.io'
+
+server.tool(
+  'get_event_odds',
+  'Get all odds for a specific event across every covered sportsbook. Returns the complete set of rows for that event in one call — no pagination. Use list_events to find event ids. To narrow by book, pass sportsbook.',
+  {
+    event_id: z.string().describe('Event id from list_events, e.g. "nfl_chiefs_ravens_2026-01-18_a4"'),
+    sportsbook: z.string().optional().describe('Restrict to one book id from list_sportsbooks'),
+  },
+  async ({ event_id, sportsbook }) =>
+    run(async () => {
+      const url = new URL(`/api/v1/events/${encodeURIComponent(event_id)}/odds`, _baseUrl)
+      if (sportsbook) url.searchParams.set('sportsbook', sportsbook)
+      const resp = await fetch(url.toString(), { headers: { 'X-API-Key': apiKey! } })
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}) as Record<string, unknown>)
+        const errBody = body as { error?: { message?: string; code?: string } }
+        const error: Error & { code?: string } = new Error(
+          errBody.error?.message || `HTTP ${resp.status}`,
+        )
+        error.code = errBody.error?.code || 'unknown_error'
+        throw error
+      }
+      return resp.json()
+    }),
 )
 
 const transport = new StdioServerTransport()
