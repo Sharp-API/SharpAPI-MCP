@@ -1,5 +1,7 @@
 # SharpAPI MCP Server
 
+[![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/sharp-api/sharpapi-mcp)
+
 MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
 Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), for HTTP requests.
