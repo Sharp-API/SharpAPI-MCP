@@ -20,7 +20,18 @@ let out = '', err = ''
 proc.stdout.on('data', (d) => { out += d.toString() })
 proc.stderr.on('data', (d) => { err += d.toString() })
 
-const code = await new Promise((resolve) => proc.on('close', resolve))
+// A hang IS the regression, so fail on it rather than waiting. With the startup
+// guard the server exits 1 immediately; without it the server starts normally
+// and holds stdio open, so `close` never fires. Left unbounded that runs to
+// GitHub's 360-minute job default and reads as "stuck CI" rather than "the leak
+// is back". `code` is declared before the timer so the handler can read it.
+let code = null
+const timer = setTimeout(() => {
+  proc.kill('SIGKILL')
+  fail('server did not exit within 10s; it started with the control-character key')
+}, 10_000)
+code = await new Promise((resolve) => proc.on('close', resolve))
+clearTimeout(timer)
 
 function fail(why) {
   console.error('FAIL:', why)
