@@ -12,6 +12,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # The suite spawns the built server and waits for it to exit. A regression
+    # that lets it start instead would hang, so bound the job well under
+    # GitHub's 360-minute default; the tests themselves finish in seconds.
+    timeout-minutes: 10
     steps:
       # Pin actions to immutable commits to prevent upstream tag changes from
       # changing the code executed by CI.
