@@ -1,6 +1,17 @@
 # Resolver reviews, CI validates, Mergify merges. Publishing remains release-gated.
-# A new push may require fresh approval; never bypass GitHub review requirements.
-# Resolver-authored PRs need another reviewer and the protected manual merge path.
+#
+# Two positive gates, both required: the crew review verdict check AND the
+# `human-reviewed` label, which only the operator applies (`crew pr human-review`)
+# and which an agent must never set. That is stricter than the private repos in
+# this fleet, which merge on a clean verdict alone — deliberately, because these
+# repos are PUBLIC and carry the published SDKs.
+# The queue gates on the crew review verdict check rather than on an approving
+# review. Every PR here is opened by sharp-resolver[bot], and GitHub does not let
+# an author approve their own PR, so an `approved-reviews-by=sharp-resolver[bot]`
+# condition could never be satisfied and every PR needed a hand merge. The verdict
+# check is the same gate the other repos in this fleet use; the brake labels below
+# (do-not-merge / needs-human / maintainer:hold / crew-gate:hold) are unchanged and
+# still stop the queue, and the required status checks are unchanged.
 merge_queue:
   mode: serial
   max_parallel_checks: 1
@@ -13,7 +24,8 @@ queue_rules:
   queue_conditions:
   - base=main
   - -draft
-  - approved-reviews-by=sharp-resolver[bot]
+  - check-success=@sharp-resolver/crew-verdict
+  - label=human-reviewed
   - -label=do-not-merge
   - -label=needs-human
   - -label=maintainer:hold
@@ -25,7 +37,8 @@ pull_request_rules:
   conditions:
   - base=main
   - -draft
-  - approved-reviews-by=sharp-resolver[bot]
+  - check-success=@sharp-resolver/crew-verdict
+  - label=human-reviewed
   - -label=do-not-merge
   - -label=needs-human
   - -label=maintainer:hold
