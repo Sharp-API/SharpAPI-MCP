@@ -1,5 +1,10 @@
 # Resolver reviews, CI validates, Mergify merges. Publishing remains release-gated.
 #
+# Two positive gates, both required: the crew review verdict check AND the
+# `human-reviewed` label, which only the operator applies (`crew pr human-review`)
+# and which an agent must never set. That is stricter than the private repos in
+# this fleet, which merge on a clean verdict alone — deliberately, because these
+# repos are PUBLIC and carry the published SDKs.
 # The queue gates on the crew review verdict check rather than on an approving
 # review. Every PR here is opened by sharp-resolver[bot], and GitHub does not let
 # an author approve their own PR, so an `approved-reviews-by=sharp-resolver[bot]`
@@ -20,6 +25,7 @@ queue_rules:
   - base=main
   - -draft
   - check-success=@sharp-resolver/crew-verdict
+  - label=human-reviewed
   - -label=do-not-merge
   - -label=needs-human
   - -label=maintainer:hold
@@ -32,6 +38,7 @@ pull_request_rules:
   - base=main
   - -draft
   - check-success=@sharp-resolver/crew-verdict
+  - label=human-reviewed
   - -label=do-not-merge
   - -label=needs-human
   - -label=maintainer:hold
