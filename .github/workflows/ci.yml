@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "mergify/merge-queue/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # The suite spawns the built server and waits for it to exit. A regression
+    # that lets it start instead would hang, so bound the job well under
+    # GitHub's 360-minute default; the tests themselves finish in seconds.
+    timeout-minutes: 10
+    steps:
+      # Pin actions to immutable commits to prevent upstream tag changes from
+      # changing the code executed by CI.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund
+      - name: Type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      # Run the suite via `npm test` rather than naming files here. The
+      # enumerated form is how the redactor went untested: a test file that no
+      # step invoked was invisible, and so was the fact that none existed.
+      # Covers the stdio handshake, the control-character refusal, and the
+      # redactor.
+      - name: Test
+        run: npm test
+        env:
+          SHARPAPI_KEY: test-key-not-used-for-network

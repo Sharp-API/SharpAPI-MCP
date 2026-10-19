@@ -1,0 +1,75 @@
+# Publish @sharp-api/mcp-server to npm.
+#
+# Use OIDC trusted publishing without NPM_TOKEN. Automation tokens can
+# conflict with package settings that disallow bypassing 2FA. The npm CLI
+# negotiates OIDC; --provenance adds the SLSA attestation.
+#
+# Trusted publishing requires Node >= 22.14 and npm CLI >= 11.5.1.
+# The publish job uses Node 22 and upgrades npm to the 11.x line.
+#
+# ⚠ npm matches the trusted publisher on the workflow FILENAME. This file must
+# stay named publish.yml, and the connection on npmjs.com must say publish.yml
+# exactly — all fields are case-sensitive. A mismatch surfaces as ENEEDAUTH,
+# which reads like a missing token and is not one.
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  # Dry run: exercises the gate (including its build) without publishing.
+  # The protected publish job only runs on versioned releases.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    # The suite spawns the built server and waits for it to exit. A regression
+    # that lets it start instead would hang, so bound the job well under
+    # GitHub's 360-minute default; the tests themselves finish in seconds.
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node-version: ["18", "20", "22"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run build
+      # Validate the built server before publishing an immutable npm version.
+      # npm versions cannot be pulled back, so the whole suite gates publishing:
+      # handshake, the control-character refusal, and the redactor.
+      - run: npm test
+        env:
+          SHARPAPI_KEY: test-key-not-used-for-network
+
+  publish:
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
+    needs: gate
+    # The job-level `if:` above (not a step-level one) is load-bearing. With the
+    # condition only on the publish step, a workflow_dispatch dry run still
+    # granted id-token:write and still executed dependency install/build code,
+    # which could request OIDC credentials without ever reaching the guarded
+    # step. The tag check and the `release` environment gate sit on top of it.
+    environment: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      # Exact version, not the mutable 11.x tag: this step runs with id-token:write.
+      - run: npm install -g npm@11.5.1
+      - name: Publish to npm
+        run: npm publish --provenance --access public
