@@ -64,7 +64,7 @@ async function run<T>(fn: () => Promise<T>) {
   }
 }
 
-const server = new McpServer({ name: 'sharpapi', version: '0.1.0' })
+const server = new McpServer({ name: 'sharpapi', version: '0.1.1' })
 
 server.tool(
   'list_sports',
