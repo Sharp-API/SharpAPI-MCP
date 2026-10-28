@@ -1,0 +1,57 @@
+# CI validates, a reviewer signs off, Mergify merges.
+#
+# Two positive gates, both required: the automated review verdict check AND a
+# label that only a maintainer applies after reading the change. This repo is
+# public, so it takes that two-gate rule rather than merging on a clean verdict
+# alone. The brake labels below stop a merge while any one of them is present.
+#
+# Shape: merge_protections_settings plus queue_rules. The older
+# pull_request_rules + `queue` action validates cleanly but queues nothing.
+
+merge_protections_settings:
+  auto_merge_conditions:
+    - base = main
+    # The review verdict, bound to the app that publishes it: a check is
+    # matched by name, so any installed app could post one with this name.
+    - check-success = @sharp-resolver/sa-verdict
+    # The two checks main's branch rule requires.
+    - check-success = build
+    - check-success = CodeQL
+    - label = sa-approved
+    - label != do-not-merge
+    - label != sa-needs-attention
+    - label != sa-signoff:hold
+    - label != sa-gate:hold
+
+queue_rules:
+  - name: default
+    queue_conditions:
+      - "#commits-behind < 50"
+      - check-success = @sharp-resolver/sa-verdict
+      - check-success = build
+      - check-success = CodeQL
+      - label = sa-approved
+      - label != do-not-merge
+      - label != sa-needs-attention
+      - label != sa-signoff:hold
+      - label != sa-gate:hold
+    # Only a workflow re-runs on the queue's own branch (ci.yml listens on
+    # mergify/merge-queue/**); the review verdict is not posted there, so it
+    # is a queue condition and never a merge condition.
+    merge_conditions:
+      - check-success = build
+    merge_method: squash
+    batch_size: 1
+    checks_timeout: 30min
+
+commands_restrictions:
+  queue:
+    conditions:
+      - or:
+          - sender-permission >= write
+          - sender = sharp-resolver[bot]
+  refresh:
+    conditions:
+      - or:
+          - sender-permission >= write
+          - sender = sharp-resolver[bot]
