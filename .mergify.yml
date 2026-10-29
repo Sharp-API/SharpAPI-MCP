@@ -14,9 +14,12 @@ merge_protections_settings:
     # The review verdict, bound to the app that publishes it: a check is
     # matched by name, so any installed app could post one with this name.
     - check-success = @sharp-resolver/sa-verdict
-    # The two checks main's branch rule requires.
+    # The two checks main's branch rule requires. CodeQL reports neutral, not
+    # success, on a pull request that changes no code it analyzes (a lockfile-only
+    # dependency bump), and main's branch rule already counts neutral as passing.
+    # A failing CodeQL run still blocks.
     - check-success = build
-    - check-success = CodeQL
+    - check-success-or-neutral = CodeQL
     - label = sa-approved
     - label != do-not-merge
     - label != sa-needs-attention
@@ -29,7 +32,7 @@ queue_rules:
       - "#commits-behind < 50"
       - check-success = @sharp-resolver/sa-verdict
       - check-success = build
-      - check-success = CodeQL
+      - check-success-or-neutral = CodeQL
       - label = sa-approved
       - label != do-not-merge
       - label != sa-needs-attention
