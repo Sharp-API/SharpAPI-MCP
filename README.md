@@ -1,5 +1,6 @@
 # SharpAPI MCP Server
 
+[![npm](https://img.shields.io/npm/v/@sharp-api/mcp-server)](https://www.npmjs.com/package/@sharp-api/mcp-server)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/sharp-api/sharpapi-mcp)
 
 MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
@@ -8,16 +9,22 @@ Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/pa
 
 ## Install
 
-Install from GitHub:
-
-```bash
-npx github:Sharp-API/SharpAPI-MCP
-```
-
-The npm package is not published yet. Once it is:
+Install the [npm package](https://www.npmjs.com/package/@sharp-api/mcp-server) globally, which puts `sharpapi-mcp` on your PATH:
 
 ```bash
 npm install -g @sharp-api/mcp-server
+```
+
+Or run it without installing:
+
+```bash
+npx -y @sharp-api/mcp-server
+```
+
+To run from source instead, use the GitHub repository:
+
+```bash
+npx github:Sharp-API/SharpAPI-MCP
 ```
 
 ## Configure
@@ -26,7 +33,21 @@ Set `SHARPAPI_KEY` in the environment. Get a free key at <https://sharpapi.io>; 
 
 The key is read from the environment only. There is deliberately no way to pass it as a tool argument: tool arguments are model-generated and end up in transcripts and logs.
 
-Claude Desktop (`claude_desktop_config.json`):
+Claude Desktop (`claude_desktop_config.json`), running the npm package through `npx`:
+
+```json
+{
+  "mcpServers": {
+    "sharpapi": {
+      "command": "npx",
+      "args": ["-y", "@sharp-api/mcp-server"],
+      "env": { "SHARPAPI_KEY": "sk_your_key_here" }
+    }
+  }
+}
+```
+
+With the global install, call the `sharpapi-mcp` binary directly:
 
 ```json
 {
@@ -51,6 +72,7 @@ Claude Desktop (`claude_desktop_config.json`):
 | `get_arbitrage` | Cross-book arbitrage: combined implied probability under 100%. | Hobby+ |
 | `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
 | `get_middles` | Two-sided gaps where both bets can win. | any |
+| `get_event_odds` | Every odds row for one event across books, in one call with no pagination. Takes an event id from `list_events`. | any |
 
 The API enforces plan requirements. The server returns API errors unchanged, including details about the required tier.
 

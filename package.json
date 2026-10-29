@@ -1,6 +1,6 @@
 {
   "name": "@sharp-api/mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for SharpAPI: live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools",
   "type": "module",
   "bin": {
