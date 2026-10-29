@@ -6,6 +6,7 @@
 // No network: the handshake and tools/list never call SharpAPI, so this runs
 // with a dummy key.
 import { spawn } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 
 const EXPECTED = [
   'list_sports', 'list_sportsbooks', 'list_events', 'get_odds',
@@ -68,6 +69,12 @@ const init = await waitFor(1)
 if (init.error) fail(`initialize returned an error: ${JSON.stringify(init.error)}`)
 if (init.result?.serverInfo?.name !== 'sharpapi') {
   fail(`unexpected serverInfo: ${JSON.stringify(init.result?.serverInfo)}`)
+}
+// serverInfo.version is a literal in src/index.ts. Keep it equal to the package
+// version, so a client reports the release it is actually running.
+const pkgVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+if (init.result.serverInfo.version !== pkgVersion) {
+  fail(`serverInfo.version ${init.result.serverInfo.version} does not match package.json ${pkgVersion}`)
 }
 console.log('initialize ok:', JSON.stringify(init.result.serverInfo))
 
