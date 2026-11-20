@@ -14,8 +14,10 @@ name: Public text
 # pull_request_target runs this file as it is on main, never a pull request's
 # edited copy, so a pull request cannot change the check or read the secret.
 # The pull request is read through the API as plain text; none of its code is
-# checked out or run. The verdict is posted as the `public-text` commit
-# status on the pull request's head commit, which branch rules can require.
+# checked out or run. The verdict is posted as the `public-text` check run
+# on the pull request's head commit, which branch rules can require. A check
+# run, unlike a commit status, records that GitHub Actions posted it, so a
+# merge queue that copies the branch rule into its own conditions can match it.
 
 on:
   pull_request_target:
@@ -26,7 +28,8 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  statuses: write
+  checks: write    # the public-text check run
+  statuses: write  # only if GitHub refuses the check run (see post_verdict)
 
 # A pull request run rescans the whole pull request, so a newer one may cancel an
 # older one. Every push gets its own group: a push run only scans that push, so
@@ -53,7 +56,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: python3 {0}
         run: |
-          import base64, hashlib, json, os, re, sys, urllib.request
+          import base64, hashlib, json, os, re, sys, urllib.error, urllib.request
 
           ENV = os.environ
           API = "https://api.github.com"
@@ -78,10 +81,25 @@ jobs:
                   url = nxt.group(1) if nxt else None
               return items
 
-          def set_status(sha, ok, text):
+          def post_verdict(sha, ok, text):
+              """Post the verdict on `sha` as the `public-text` check run.
+
+              If GitHub refuses the check run, the verdict goes out as the
+              `public-text` commit status instead, which the branch rule also
+              accepts, so a failure here can never block a merge."""
               if not sha:
                   return
-              payload = json.dumps({"state": "success" if ok else "failure", "context": "public-text",
+              conclusion = "success" if ok else "failure"
+              check = json.dumps({"name": "public-text", "head_sha": sha, "status": "completed",
+                                  "conclusion": conclusion, "details_url": ENV["RUN_URL"],
+                                  "output": {"title": text[:140], "summary": text[:140]}}).encode()
+              try:
+                  request(f"{API}/repos/{ENV['REPO']}/check-runs", data=check)
+                  return
+              except urllib.error.HTTPError as exc:
+                  print(f"::warning::Could not post the public-text check run (HTTP {exc.code}); "
+                        "posting the commit status instead.")
+              payload = json.dumps({"state": conclusion, "context": "public-text",
                                     "description": text[:140], "target_url": ENV["RUN_URL"]}).encode()
               request(f"{API}/repos/{ENV['REPO']}/statuses/{sha}", data=payload)
 
@@ -98,10 +116,10 @@ jobs:
           if not encoded:
               if ENV.get("ACTOR") == "dependabot[bot]":
                   print("::notice::PUBTEXT_GUARD is not available to this Dependabot run; not checked.")
-                  set_status(head, True, "Dependabot run: guard unavailable, not checked")
+                  post_verdict(head, True, "Dependabot run: guard unavailable, not checked")
                   sys.exit(0)
               print("::error::The PUBTEXT_GUARD secret is missing or empty, so nothing could be checked.")
-              set_status(head, False, "Guard secret missing; nothing was checked")
+              post_verdict(head, False, "Guard secret missing; nothing was checked")
               sys.exit(1)
           guard = {"__name__": "pubtext_guard"}
           try:
@@ -110,7 +128,7 @@ jobs:
               scan, scan_branch = guard["scan"], guard["scan_branch"]
           except Exception as exc:  # report the type only: the message could quote a pattern
               print(f"::error::The guard failed to load ({type(exc).__name__}).")
-              set_status(head, False, "Guard failed to load")
+              post_verdict(head, False, "Guard failed to load")
               sys.exit(1)
           print(f"guard sha256 {hashlib.sha256(raw_guard).hexdigest()[:12]}")
 
@@ -227,7 +245,7 @@ jobs:
           if incomplete:
               print("::error::Too large to scan completely (" + "; ".join(incomplete) + "). "
                     "Split the change into smaller pull requests.")
-              set_status(head, False, "Too large to scan completely; split the change")
+              post_verdict(head, False, "Too large to scan completely; split the change")
               sys.exit(1)
           if hits:
               for where, category, path, line in hits:
@@ -242,7 +260,7 @@ jobs:
                   print("public-text: identity-email means a commit author or committer uses a personal "
                         "address. Commit again with a GitHub noreply address (Settings > Emails) or a "
                         "company address.")
-              set_status(head, False, f"{len(hits)} internal-detail hit(s); see the run")
+              post_verdict(head, False, f"{len(hits)} internal-detail hit(s); see the run")
               sys.exit(1)
           print(f"public-text: clean, {surfaces} surfaces scanned")
-          set_status(head, True, f"Clean: {surfaces} surfaces scanned")
+          post_verdict(head, True, f"Clean: {surfaces} surfaces scanned")
