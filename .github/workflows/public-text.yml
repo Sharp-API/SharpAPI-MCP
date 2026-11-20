@@ -174,7 +174,9 @@ jobs:
           # Every commit's author and committer are public too. Each must use a GitHub
           # noreply address or the company domain, and must not match the guard; a
           # person's own name is expected here, so that category is not counted.
-          ALLOWED_EMAIL = re.compile(r"(@users\.noreply\.github\.com|^noreply@github\.com|@sharpapi\.io)$", re.I)
+          # Mergify signs the test commits of its merge queue with its own fixed
+          # service address, which names no person, so that one address is allowed.
+          ALLOWED_EMAIL = re.compile(r"(@users\.noreply\.github\.com|^noreply@github\.com|^commit-signer@mergify\.com|@sharpapi\.io)$", re.I)
 
           def check_identity(c):
               for role in ("author", "committer"):
