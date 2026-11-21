@@ -11,7 +11,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "license": "MIT",
   "author": "SharpAPI <hello@sharpapi.io>",
@@ -33,13 +33,14 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/handshake.mjs && node tests/keyguard.mjs && node tests/redact.mjs",
+    "test": "node tests/handshake.mjs && node tests/discover.mjs && node tests/keyguard.mjs && node tests/redact.mjs && node tests/hosted.mjs",
+    "start:http": "node dist/http.js",
     "prepublishOnly": "npm run build",
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@sharp-api/client": "^0.4.2",
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
