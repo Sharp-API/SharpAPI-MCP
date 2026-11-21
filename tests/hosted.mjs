@@ -8,10 +8,10 @@ import { spawnSync } from 'node:child_process'
 import http from 'node:http'
 import { addressBucket, createHostedServer } from '../dist/hosted.js'
 
-const GOOD = 'sk_live_GOOD_0123456789abcdef'
-const BAD = 'sk_live_BAD_0123456789'
-const ECHO = 'sk_live_ECHO_0123456789'
-const FLAKY = 'sk_live_FLAKY_0123456789'
+const GOOD = 'sk_test_GOOD_0123456789abcdef'
+const BAD = 'sk_test_BAD_0123456789'
+const ECHO = 'sk_test_ECHO_0123456789'
+const FLAKY = 'sk_test_FLAKY_0123456789'
 
 // ---- fake upstream: records every request it receives
 const upstream = []
