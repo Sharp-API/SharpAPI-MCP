@@ -47,7 +47,7 @@ assert.equal(discover.result._meta['io.modelcontextprotocol/serverInfo'].name, '
 assert.deepEqual(discover.result.capabilities.tools, { listChanged: false })
 
 const list = await ask(2, 'tools/list')
-assert.equal(list.result.tools.length, 9)
+assert.equal(list.result.tools.length, 10)
 assert.equal(list.result.cacheScope, 'public')
 assert.ok(list.result.ttlMs > 0)
 assert.ok(list.result.tools.every((t) => t.annotations?.readOnlyHint === true), 'every tool is read-only')
