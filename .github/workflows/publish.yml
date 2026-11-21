@@ -32,7 +32,8 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        node-version: ["18", "20", "22"]
+        # The MCP SDK v2 requires Node.js 20 or later.
+        node-version: ["20", "22"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -43,7 +44,8 @@ jobs:
       - run: npm run build
       # Validate the built server before publishing an immutable npm version.
       # npm versions cannot be pulled back, so the whole suite gates publishing:
-      # handshake, the control-character refusal, and the redactor.
+      # both stdio handshakes, the control-character refusal, the redactor and
+      # the HTTP relay's controls.
       - run: npm test
         env:
           SHARPAPI_KEY: test-key-not-used-for-network
