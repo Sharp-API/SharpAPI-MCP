@@ -9,7 +9,7 @@
  *    logs and connector settings, so `?api_key=` is refused, never read);
  *  - Host and Origin allowlists (DNS rebinding, cross-site calls), 403;
  *  - a per-address cap on rejected keys, 429. Behind a local reverse proxy
- *    an address-based ban sees only loopback, so the relay counts them
+ *    an address-based ban sees only the proxy's address, so the relay counts them
  *    itself, by the forwarded address; IPv6 by /64;
  *  - a key from `Authorization: Bearer` or `X-API-Key` only; none, 401, and
  *    nothing is forwarded;
@@ -29,11 +29,10 @@ import { createSharpApiServer } from './tools.js'
 
 export interface HostedOptions {
   /**
-   * The API base URL. In production a loopback-only listener that forwards
-   * the `X-Real-IP` the relay sets, so per-IP limits land on the end user.
+   * The API base URL the relay calls, e.g. https://api.sharpapi.io.
    */
   baseUrl: string
-  /** Host header hostnames accepted, without port, e.g. ['mcp.sharpapi.io']. */
+  /** Host header hostnames accepted, without port, e.g. ['localhost']. */
   allowedHosts: string[]
   /** Origin hostnames accepted. A request with any other Origin gets 403. */
   allowedOrigins: string[]

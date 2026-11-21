@@ -4,9 +4,8 @@
  * Not part of the npm bin: `npx @sharp-api/mcp-server` still runs stdio.
  *
  * Environment:
- *   SHARPAPI_BASE_URL    required. The API listener the relay calls; in
- *                        production a loopback-only one that trusts the
- *                        relay's X-Real-IP, so per-IP limits stay per user.
+ *   SHARPAPI_BASE_URL    required. The API base URL the relay calls,
+ *                        e.g. https://api.sharpapi.io.
  *   MCP_ALLOWED_HOSTS    Host header hostnames, comma-separated
  *                        (default localhost,127.0.0.1).
  *   MCP_ALLOWED_ORIGINS  Origin hostnames, comma-separated (default none:
