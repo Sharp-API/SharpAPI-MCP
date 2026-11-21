@@ -215,5 +215,24 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
       run(() => get(`/api/v1/events/${encodeURIComponent(event_id)}/odds`, { sportsbook })),
   )
 
+  server.registerTool(
+    'get_splits',
+    {
+      description: 'Get public betting splits: the share of bets (bets_pct) and of money (handle_pct) on each side of an event\'s spread, total and moneyline, per source. sportsbook "consensus" is the deduplicated row most events carry. Results are paginated, 20 rows by default; when pagination.has_more is true, pass pagination.next_offset back as offset to fetch the next page. Requires a Pro plan or above.',
+      inputSchema: z.object({
+        sport: z.string().optional().describe('Sport id from list_sports, e.g. "basketball". Comma-separate for several.'),
+        league: z.string().optional().describe('League id, e.g. "nfl", "ncaaf", "nba", "ncaab". Comma-separate for several.'),
+        sportsbook: z.string().optional().describe('Splits source: "consensus" or a book id from list_sportsbooks. Comma-separate for several.'),
+        event_id: z.string().optional().describe('Event id from list_events. Comma-separate for several.'),
+        market: z.string().optional().describe('Only events carrying this market: "spread", "total" or "moneyline". Comma-separate for several.'),
+        // The API caps a page at 200 rows (it clamps anything larger).
+        limit: z.number().int().positive().max(200).optional().describe('Rows per page, default 20, max 200'),
+        offset: z.number().int().nonnegative().optional().describe('pagination.next_offset from the previous page'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async (args) => run(() => get('/api/v1/splits', args)),
+  )
+
   return server
 }

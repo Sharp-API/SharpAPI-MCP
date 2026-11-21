@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs'
 const EXPECTED = [
   'list_sports', 'list_sportsbooks', 'list_events', 'get_odds',
   'get_best_odds', 'get_arbitrage', 'get_ev', 'get_middles', 'get_event_odds',
+  'get_splits',
 ]
 
 const proc = spawn('node', ['dist/index.js'], {

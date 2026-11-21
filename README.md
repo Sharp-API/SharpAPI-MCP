@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@sharp-api/mcp-server)](https://www.npmjs.com/package/@sharp-api/mcp-server)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/sharp-api/sharpapi-mcp)
 
-MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
+MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage, middles and betting splits as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
 Built on the official MCP TypeScript SDK v2. It speaks the current MCP revision (2026-07-28) and the 2025-era revisions, over stdio and over Streamable HTTP. Requires Node.js 20 or later.
 
@@ -101,6 +101,7 @@ Each tool call makes exactly one API request, with no retries. The server writes
 | `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
 | `get_middles` | Two-sided gaps where both bets can win. | any |
 | `get_event_odds` | Every odds row for one event across books, in one call with no pagination. Takes an event id from `list_events`. | any |
+| `get_splits` | Public betting splits: share of bets (`bets_pct`) and of money (`handle_pct`) on each side of the spread, total and moneyline. `sportsbook: "consensus"` is the deduplicated row. Paginated: pass `pagination.next_offset` back as `offset`. | Pro+ |
 
 The API enforces plan requirements. The server returns API errors unchanged, including details about the required tier.
 

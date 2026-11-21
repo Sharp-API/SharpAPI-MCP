@@ -96,7 +96,7 @@ const list = modern('tools/list')
 const tools = await request({ body: list.body, headers: { ...list.headers, 'X-API-Key': GOOD } })
 assert.deepEqual(tools.json.result.tools.map((t) => t.name), [
   'list_sports', 'list_sportsbooks', 'list_events', 'get_odds', 'get_best_odds',
-  'get_arbitrage', 'get_ev', 'get_middles', 'get_event_odds',
+  'get_arbitrage', 'get_ev', 'get_middles', 'get_event_odds', 'get_splits',
 ])
 assert.equal(tools.json.result.cacheScope, 'public')
 assert.equal(upstream.length, 0, 'handshake and listing must not call the API')
@@ -117,6 +117,16 @@ assert.deepEqual(
 // A short key is never logged whole: at most half of it.
 await callTool('sk_short01', 'list_sports')
 assert.equal(JSON.parse(logs.at(-1)).key_id, 'sk_sh')
+
+// ---- get_splits reads /api/v1/splits with its arguments as the query
+upstream.length = 0
+const splits = await callTool(GOOD, 'get_splits', { league: 'nba', sportsbook: 'consensus', market: 'spread', limit: 200, offset: 20 })
+assert.equal(splits.json.result.isError, undefined, splits.text)
+assert.deepEqual(upstream.map((u) => u.url), ['/api/v1/splits?league=nba&sportsbook=consensus&market=spread&limit=200&offset=20'])
+// A page over the API's 200-row cap is refused before the API.
+const tooBig = await callTool(GOOD, 'get_splits', { limit: 201 })
+assert.ok(tooBig.json.error || tooBig.json.result?.isError, 'get_splits accepted limit 201')
+assert.equal(upstream.length, 1, 'a get_splits call over the 200-row cap reached the API')
 
 // ---- no retries: one 502 is one upstream call and an error result
 upstream.length = 0
