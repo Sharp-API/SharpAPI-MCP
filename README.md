@@ -5,7 +5,7 @@
 
 MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage and middles as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
-Uses the official TypeScript SDK, [`@sharp-api/client`](https://www.npmjs.com/package/@sharp-api/client), for HTTP requests.
+Built on the official MCP TypeScript SDK v2. It speaks the current MCP revision (2026-07-28) and the 2025-era revisions, over stdio and over Streamable HTTP. Requires Node.js 20 or later.
 
 ## Install
 
@@ -60,6 +60,34 @@ With the global install, call the `sharpapi-mcp` binary directly:
 }
 ```
 
+## Run as a remote (HTTP) server
+
+The same tools can be served over Streamable HTTP for clients that connect by URL. This entry point is a separate script (`dist/http.js`), not the `sharpapi-mcp` binary. From a clone:
+
+```bash
+npm ci && npm run build
+SHARPAPI_BASE_URL=https://api.sharpapi.io npm run start:http
+# listening on http://127.0.0.1:8787/mcp
+```
+
+Each caller sends their own SharpAPI key with every request, in an `Authorization: Bearer <key>` header or in `X-API-Key`. The server holds no key of its own and refuses to start if `SHARPAPI_KEY` is set, so every API call runs under the caller's own plan and rate limits.
+
+| variable | meaning | default |
+|---|---|---|
+| `SHARPAPI_BASE_URL` | API base URL the server calls (required) | none |
+| `MCP_ALLOWED_HOSTS` | Host header names accepted, comma-separated | `localhost,127.0.0.1` |
+| `MCP_ALLOWED_ORIGINS` | Origin host names accepted; a request with any other `Origin` gets 403 | none |
+| `MCP_HOST`, `MCP_PORT` | listen address | `127.0.0.1`, `8787` |
+
+What it refuses, without calling the API:
+
+- a request with no key (401), or with a key in the URL: any query string on `/mcp` is rejected (400);
+- an unlisted `Host` or `Origin` (403), and anything but `POST /mcp` (`GET /healthz` answers a liveness probe);
+- a key the API rejected in the last minute, and further requests from an address that has sent 10 rejected keys in 5 minutes (429);
+- more than 4 concurrent requests per key or 64 in total, and request bodies over 64 KiB.
+
+Each tool call makes exactly one API request, with no retries. The server writes one JSON line per request to stdout: time, client address, MCP method, tool name, client name and version, the first 12 characters of the key (never more than half of it), HTTP and API status, latency and result size. It never logs the full key, request headers, the query string, tool arguments or results.
+
 ## Tools
 
 | tool | what it does | plan |
@@ -81,7 +109,7 @@ There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its
 ## Notes
 
 - Tool errors are returned with `isError` so clients can handle rate limits and plan requirements.
-- Diagnostics are written to stderr; stdout is reserved for the MCP protocol.
+- Diagnostics are written to stderr; in stdio mode stdout is reserved for the MCP protocol.
 
 ## License
 

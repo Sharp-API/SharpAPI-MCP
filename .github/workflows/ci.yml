@@ -31,8 +31,8 @@ jobs:
       # Run the suite via `npm test` rather than naming files here. The
       # enumerated form is how the redactor went untested: a test file that no
       # step invoked was invisible, and so was the fact that none existed.
-      # Covers the stdio handshake, the control-character refusal, and the
-      # redactor.
+      # Covers both stdio handshakes (2025-era and 2026-07-28), the
+      # control-character refusal, the redactor, and the HTTP relay's controls.
       - name: Test
         run: npm test
         env:
