@@ -19,7 +19,9 @@ merge_protections_settings:
     # dependency bump), and main's branch rule already counts neutral as passing.
     # A failing CodeQL run still blocks.
     - check-success = build
-    - check-success-or-neutral = CodeQL
+    - or:
+        - check-success = CodeQL
+        - check-neutral = CodeQL
     - label = sa-approved
     - label != do-not-merge
     - label != sa-needs-attention
@@ -32,7 +34,9 @@ queue_rules:
       - "#commits-behind < 50"
       - check-success = @sharp-resolver/sa-verdict
       - check-success = build
-      - check-success-or-neutral = CodeQL
+      - or:
+          - check-success = CodeQL
+          - check-neutral = CodeQL
       - label = sa-approved
       - label != do-not-merge
       - label != sa-needs-attention
