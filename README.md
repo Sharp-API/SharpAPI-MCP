@@ -90,20 +90,50 @@ Each tool call makes exactly one API request, with no retries. The server writes
 
 ## Tools
 
+Reference lists:
+
 | tool | what it does | plan |
 |---|---|---|
 | `list_sports` | Sports covered, with live/upcoming counts. Start here to find valid sport ids. | any |
+| `get_leagues` | League ids with their sport and event counts. Pass `sport` to list one sport. | any |
 | `list_sportsbooks` | Book ids for the `sportsbook` argument. | any |
+| `get_markets` | Market ids (`moneyline`, `point_spread`, ...) for the `market` argument, with the books pricing each. Scope with `league` or `sport`. | any |
+| `get_market_types` | The shape of each market type's selections, with stable numeric ids. | any |
+| `get_account_info` | The plan, rate limit and features of the key in use. | any |
+
+Events and odds:
+
+| tool | what it does | plan |
+|---|---|---|
 | `list_events` | Events with ids, start times, teams. | any |
-| `get_odds` | Normalized odds across books: American, decimal, implied probability. | any |
+| `get_odds` | Normalized odds across books: American, decimal, implied probability. Paginated: pass `pagination.next_cursor` back as `cursor`. | any |
+| `get_odds_delta` | Only the odds that changed since a timestamp (10 minutes back at most). The list of removed odds is left out unless `include_removed` is true. | any |
 | `get_best_odds` | Best price per selection across books. The line-shopping view. | any |
-| `get_arbitrage` | Cross-book arbitrage: combined implied probability under 100%. | Hobby+ |
-| `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
-| `get_middles` | Two-sided gaps where both bets can win. | any |
-| `get_event_odds` | Every odds row for one event across books, in one call with no pagination. Takes an event id from `list_events`. | any |
+| `compare_odds` | One event's prices side by side across books, one row per market, selection and line. Pass `market` to compare one market. | any |
+| `get_event_odds` | The odds for one event across books, in one call with no pagination. Pass `sportsbook` to read one book. Takes an event id from `list_events`. | any |
+| `get_closing_lines` | Each book's last pre-match prices for an event, with no-vig and fair closing probabilities, for closing-line value (CLV). Pass `sportsbook` and `market`. | Pro+ |
 | `get_splits` | Public betting splits: share of bets (`bets_pct`) and of money (`handle_pct`) on each side of the spread, total and moneyline. `sportsbook: "consensus"` is the deduplicated row. Paginated: pass `pagination.next_offset` back as `offset`. | Pro+ |
 
+Opportunities:
+
+| tool | what it does | plan |
+|---|---|---|
+| `get_arbitrage` | Cross-book arbitrage: combined implied probability under 100%. | Hobby+ |
+| `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
+| `get_middles` | Two-sided gaps where both bets can win. | Pro+ |
+| `find_low_hold` | The tightest lines across books: lowest combined margin (`hold_percentage`). | Pro+ |
+
+Futures:
+
+| tool | what it does | plan |
+|---|---|---|
+| `get_futures` | Season-long markets (championship and division winners, MVP and other awards, win totals) with their ids. | Enterprise |
+| `get_futures_odds` | Odds on futures, grouped by future. Takes a `future_id` from `get_futures`, or a `league`. | Enterprise |
+| `compare_futures_lines` | One future side by side across books. | Enterprise |
+
 The API enforces plan requirements. The server returns API errors unchanged, including details about the required tier.
+
+Answers are compact JSON. Three tools read routes that return everything held for one event, with no page size: `get_event_odds`, `compare_odds` and `get_closing_lines`. For a busy game that is thousands of rows, so an answer over about 100 kB is cut to its first rows and carries a `truncated` note: which lists were cut, how many rows each kept of how many, and how to ask for less. `compare_odds` and `get_closing_lines` narrow by `market` in this server, matching the id whole against each row's `market_type`; when nothing matches, the answer lists the ids the event does carry as `available_markets`. Paginated tools are never cut: use their `limit` and cursor or offset.
 
 There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its own endpoint; the fair number arrives as `fairProbability` on each `get_ev` opportunity.
 
