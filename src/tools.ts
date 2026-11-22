@@ -16,7 +16,7 @@ import { makeRedactor } from './redact.js'
 export const SERVER_NAME = 'sharpapi'
 // Keep equal to package.json's version, so a client reports the release it is
 // actually running. tests/handshake.mjs checks it.
-export const VERSION = '0.1.1'
+export const VERSION = '0.2.0'
 export const DEFAULT_BASE_URL = 'https://api.sharpapi.io'
 
 /**
