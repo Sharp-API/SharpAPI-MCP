@@ -11,7 +11,10 @@ import { readFileSync } from 'node:fs'
 const EXPECTED = [
   'list_sports', 'list_sportsbooks', 'list_events', 'get_odds',
   'get_best_odds', 'get_arbitrage', 'get_ev', 'get_middles', 'get_event_odds',
-  'get_splits',
+  'get_splits', 'get_leagues', 'get_markets', 'get_market_types',
+  'get_odds_delta', 'compare_odds', 'get_closing_lines', 'get_futures',
+  'get_futures_odds', 'compare_futures_lines', 'find_low_hold',
+  'get_account_info',
 ]
 
 const proc = spawn('node', ['dist/index.js'], {
