@@ -55,7 +55,7 @@ assert.ok(list.result.tools.every((t) => t.annotations?.readOnlyHint === true), 
 const call = await ask(3, 'tools/call', { name: 'list_sports', arguments: {} })
 assert.match(call.result.content[0].text, /baseball/)
 assert.deepEqual(seen.map((s) => s.url), ['/api/v1/sports', '/api/v1/sports'], 'one retry after the 502')
-assert.ok(seen.every((s) => s.key === 'test-key' && s.ua === 'sharpapi-mcp/0.1.1 (stdio)'))
+assert.ok(seen.every((s) => s.key === 'test-key' && s.ua === 'sharpapi-mcp/0.2.0 (stdio)'))
 
 clearTimeout(timer)
 proc.kill()

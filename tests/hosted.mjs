@@ -106,7 +106,7 @@ const ok = await callTool(GOOD, 'get_odds', { player_name: 'ARG_SECRET_VALUE' },
 assert.equal(ok.status, 200)
 assert.match(ok.json.result.content[0].text, /draftkings/)
 assert.deepEqual(upstream, [{
-  url: '/api/v1/odds?player_name=ARG_SECRET_VALUE', key: GOOD, ip: '203.0.113.7', ua: 'sharpapi-mcp/0.1.1 (hosted)',
+  url: '/api/v1/odds?player_name=ARG_SECRET_VALUE', key: GOOD, ip: '203.0.113.7', ua: 'sharpapi-mcp/0.2.0 (hosted)',
 }])
 const line = JSON.parse(logs.at(-1))
 assert.deepEqual(
