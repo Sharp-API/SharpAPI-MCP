@@ -38,7 +38,7 @@ Claude Desktop (`claude_desktop_config.json`), running the npm package through `
 ```json
 {
   "mcpServers": {
-    "sharpapi": {
+    "SharpAPI": {
       "command": "npx",
       "args": ["-y", "@sharp-api/mcp-server"],
       "env": { "SHARPAPI_KEY": "sk_your_key_here" }
@@ -52,7 +52,7 @@ With the global install, call the `sharpapi-mcp` binary directly:
 ```json
 {
   "mcpServers": {
-    "sharpapi": {
+    "SharpAPI": {
       "command": "sharpapi-mcp",
       "env": { "SHARPAPI_KEY": "sk_your_key_here" }
     }
