@@ -75,3 +75,44 @@ jobs:
       - run: npm install -g npm@11.5.1
       - name: Publish to npm
         run: npm publish --provenance --access public
+
+  # List the release in the MCP Registry (registry.modelcontextprotocol.io).
+  # A job of its own, after npm: the registry checks that the npm package it
+  # is told about exists and carries the same mcpName, and a separate job can
+  # be re-run alone if the registry is unreachable. Re-running `publish`
+  # would fail, since an npm version cannot be published twice.
+  registry:
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
+    needs: publish
+    environment: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      # The registry grants the io.github.Sharp-API/* names to this
+      # repository's GitHub OIDC token. No stored secret is involved.
+      id-token: write
+    env:
+      # A fixed release, verified below. Change it on purpose, never to "latest".
+      MCP_PUBLISHER_VERSION: v1.8.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Download and verify mcp-publisher
+        run: |
+          set -euo pipefail
+          archive="mcp-publisher_linux_amd64.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
+      - name: Sign in to the MCP Registry
+        run: ./mcp-publisher login github-oidc
+      - name: Publish server.json
+        run: ./mcp-publisher publish

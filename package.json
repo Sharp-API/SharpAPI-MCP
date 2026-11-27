@@ -1,6 +1,7 @@
 {
   "name": "@sharp-api/mcp-server",
   "version": "0.2.0",
+  "mcpName": "io.github.Sharp-API/sharpapi-mcp",
   "description": "MCP server for SharpAPI: live sports betting odds, +EV, arbitrage, middles and betting splits as Model Context Protocol tools",
   "type": "module",
   "bin": {
@@ -33,7 +34,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/handshake.mjs && node tests/discover.mjs && node tests/keyguard.mjs && node tests/redact.mjs && node tests/fit.mjs && node tests/tools.mjs && node tests/hosted.mjs",
+    "test": "node tests/handshake.mjs && node tests/discover.mjs && node tests/keyguard.mjs && node tests/redact.mjs && node tests/fit.mjs && node tests/tools.mjs && node tests/hosted.mjs && node tests/registry.mjs",
     "start:http": "node dist/http.js",
     "prepublishOnly": "npm run build",
     "prepare": "npm run build"
