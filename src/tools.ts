@@ -137,7 +137,7 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
       inputSchema: z.object({
         sport: z.string().optional().describe('Sport id from list_sports, e.g. "baseball"'),
         league: z.string().optional().describe('League id, e.g. "mlb"'),
-        live: z.boolean().optional().describe('Only events currently in play'),
+        live: z.boolean().optional().describe('Only live events'),
         date: z.string().optional().describe('ISO date, e.g. "2026-09-08"'),
         limit: z.number().int().positive().max(500).optional(),
       }),
@@ -155,8 +155,8 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
         league: z.string().optional(),
         event: z.string().optional().describe('Event id from list_events'),
         sportsbook: z.string().optional().describe('Restrict to one book id'),
-        market: z.string().optional().describe('e.g. "moneyline", "spread", "total"'),
-        live: z.boolean().optional().describe('Only in-play markets'),
+        market: z.string().optional().describe('Market id from get_markets, e.g. "moneyline", "point_spread", "total_points"'),
+        live: z.boolean().optional().describe('Only live markets'),
         limit: z.number().int().positive().max(500).optional(),
         cursor: z.string().optional().describe('Pagination cursor from a previous response (pagination.next_cursor). Pass this to fetch the next page of results when pagination.has_more is true.'),
         player_name: z.string().optional().describe('Filter to one player. Full name, case-insensitive exact match — "Travis Kelce" matches, "Kelce" does not. Only appears on player-prop markets.'),
@@ -200,7 +200,7 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
   server.registerTool(
     'get_ev',
     {
-      description: 'Find positive expected value (+EV) bets: prices that beat the fair probability implied by the wider market. Each opportunity carries a fairProbability field, which is the de-vigged number. Requires a Pro plan or above.',
+      description: 'Find positive expected value (+EV) bets: prices that beat the fair probability implied by the wider market. Each opportunity carries a fair_probability field, which is the de-vigged number. Requires a Pro plan or above.',
       inputSchema: z.object({
         sport: z.string().optional(),
         league: z.string().optional(),
@@ -312,7 +312,7 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
         event_id: z.string().optional().describe('Event id from list_events'),
         market: z.string().optional().describe('Market id from get_markets, e.g. "moneyline"'),
         market_segment: z.string().optional().describe('Contest slice, e.g. "full_game", "1st_half". Comma-separate for several.'),
-        live: z.boolean().optional().describe('Only in-play markets'),
+        live: z.boolean().optional().describe('Only live markets'),
         // The API caps a page at 500 rows (it clamps anything larger).
         limit: z.number().int().positive().max(500).optional().describe('Rows per page, default 50, max 500'),
         offset: z.number().int().nonnegative().optional().describe('pagination.next_offset from the previous page'),
@@ -425,7 +425,7 @@ export function createSharpApiServer(opts: SharpApiServerOptions): McpServer {
       inputSchema: z.object({
         sport: z.string().optional().describe('Sport id from list_sports'),
         league: z.string().optional(),
-        live: z.boolean().optional().describe('Only in-play markets'),
+        live: z.boolean().optional().describe('Only live markets'),
         // The API caps a page at 200 rows (it clamps anything larger).
         limit: z.number().int().positive().max(200).optional().describe('Rows per page, default 50, max 200'),
       }),

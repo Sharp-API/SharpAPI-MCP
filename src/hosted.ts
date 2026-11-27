@@ -56,7 +56,7 @@ export const DEFAULTS = {
   maxInflight: 64,
   maxInflightPerKey: 4,
   badKeyTtlMs: 60_000,
-  // The same as the API's own per-address cap on rejected keys: 10 per 5 minutes.
+  // At most 10 rejected keys per address in 5 minutes.
   authFailLimit: 10,
   authFailWindowMs: 5 * 60_000,
 }
@@ -234,8 +234,8 @@ export function createHostedServer(options: HostedOptions): Server {
     }
     const { key } = got
     const kh = sha(key)
-    // The first 12 characters, as the API's own access log records keys, but
-    // never more than half the key, so a short key is never logged whole.
+    // The first 12 characters, but never more than half the key, so a short
+    // key is never logged whole.
     entry.key_id = key.slice(0, Math.min(12, key.length >> 1))
     if ((badKeys.get(kh) ?? 0) > Date.now()) {
       countFail(bucket)
