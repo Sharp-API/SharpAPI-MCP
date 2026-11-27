@@ -5,7 +5,17 @@
 
 MCP server for [SharpAPI](https://sharpapi.io). Exposes live sports betting odds, +EV, arbitrage, middles and betting splits as Model Context Protocol tools, for compatible AI applications to query sports betting data.
 
+[Documentation](https://docs.sharpapi.io/en/sdks/mcp) · [Get a free key](https://sharpapi.io) · [Pricing](https://sharpapi.io/pricing) · [Changelog](CHANGELOG.md)
+
 Built on the official MCP TypeScript SDK v2. It speaks the current MCP revision (2026-07-28) and the 2025-era revisions, over stdio and over Streamable HTTP. Requires Node.js 20 or later.
+
+## Two ways to connect
+
+**Hosted, nothing to install.** SharpAPI runs an MCP server at `https://mcp.sharpapi.io/mcp`. Add it to your app as a remote server and send your key in an `X-API-Key` header. The [documentation](https://docs.sharpapi.io/en/sdks/mcp) has the setup for each app.
+
+**Local, this package.** Run `npx -y @sharp-api/mcp-server` with `SHARPAPI_KEY` set. The rest of this page is about the package.
+
+Both read the same API with your key, under your plan. Six tools are named differently on the two servers; the list is at the end of [Tools](#tools).
 
 ## Install
 
@@ -29,11 +39,23 @@ npx github:Sharp-API/SharpAPI-MCP
 
 ## Configure
 
-Set `SHARPAPI_KEY` in the environment. Get a free key at <https://sharpapi.io>; the free tier serves DraftKings and FanDuel at 12 requests/min with no card.
+Set `SHARPAPI_KEY` in the environment. Get a free key at <https://sharpapi.io>; the free tier serves pre-match odds from DraftKings and FanDuel with a 60-second delay, at 12 requests/min, with no card.
 
 The key is read from the environment only. There is deliberately no way to pass it as a tool argument: tool arguments are model-generated and end up in transcripts and logs.
 
-Claude Desktop (`claude_desktop_config.json`), running the npm package through `npx`:
+Claude Code:
+
+```bash
+claude mcp add SharpAPI -e SHARPAPI_KEY=sk_your_key_here -- npx -y @sharp-api/mcp-server
+```
+
+Codex:
+
+```bash
+codex mcp add SharpAPI --env SHARPAPI_KEY=sk_your_key_here -- npx -y @sharp-api/mcp-server
+```
+
+Claude Desktop (`claude_desktop_config.json`) and Cursor (`~/.cursor/mcp.json`, or `.cursor/mcp.json` in a project), running the npm package through `npx`:
 
 ```json
 {
@@ -59,6 +81,16 @@ With the global install, call the `sharpapi-mcp` binary directly:
   }
 }
 ```
+
+## Try it
+
+Once the server is connected, ask your assistant:
+
+- "What sports have live events right now?"
+- "Show me NBA odds for tonight's games on DraftKings."
+- "Find arbitrage opportunities in soccer with at least 1% profit."
+- "Compare the odds for the Chiefs game across all books."
+- "What plan is my key on, and what can it call?"
 
 ## Run as a remote (HTTP) server
 
@@ -119,7 +151,7 @@ Opportunities:
 | tool | what it does | plan |
 |---|---|---|
 | `get_arbitrage` | Cross-book arbitrage: combined implied probability under 100%. | Hobby+ |
-| `get_ev` | +EV bets against fair probability. Carries `fairProbability`, the de-vigged number. | Pro+ |
+| `get_ev` | +EV bets against fair probability. Carries `fair_probability`, the de-vigged number. | Pro+ |
 | `get_middles` | Two-sided gaps where both bets can win. | Pro+ |
 | `find_low_hold` | The tightest lines across books: lowest combined margin (`hold_percentage`). | Pro+ |
 
@@ -135,12 +167,25 @@ The API enforces plan requirements. The server returns API errors unchanged, inc
 
 Answers are compact JSON. Three tools read routes that return everything held for one event, with no page size: `get_event_odds`, `compare_odds` and `get_closing_lines`. For a busy game that is thousands of rows, so an answer over about 100 kB is cut to its first rows and carries a `truncated` note: which lists were cut, how many rows each kept of how many, and how to ask for less. `compare_odds` and `get_closing_lines` narrow by `market` in this server, matching the id whole against each row's `market_type`; when nothing matches, the answer lists the ids the event does carry as `available_markets`. Paginated tools are never cut: use their `limit` and cursor or offset.
 
-There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its own endpoint; the fair number arrives as `fairProbability` on each `get_ev` opportunity.
+There is no separate no-vig tool. SharpAPI does not expose de-vigged odds as its own endpoint; the fair number arrives as `fair_probability` on each `get_ev` opportunity.
+
+The hosted server at `https://mcp.sharpapi.io/mcp` has 21 tools as well. Fifteen share a name with this package; six are named differently:
+
+- `list_sports` here is `get_sports` there
+- `list_sportsbooks` here is `get_sportsbooks` there
+- `list_events` here is `get_events` there
+- `get_ev` here is `find_ev_opportunities` there
+- `get_arbitrage` here is `find_arbitrage` there
+- `get_middles` here is `find_middles` there
 
 ## Notes
 
 - Tool errors are returned with `isError` so clients can handle rate limits and plan requirements.
 - Diagnostics are written to stderr; in stdio mode stdout is reserved for the MCP protocol.
+
+## Support
+
+Questions and bug reports: [open an issue](https://github.com/Sharp-API/SharpAPI-MCP/issues) or write to support@sharpapi.io. To report a security problem, see [SECURITY.md](SECURITY.md).
 
 ## License
 

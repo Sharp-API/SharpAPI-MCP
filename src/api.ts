@@ -17,12 +17,12 @@ export interface ApiOptions {
   userAgent: string
   /** The end user's address, forwarded as `X-Real-IP`. Hosted mode only. */
   clientIp?: string
-  /** Per attempt. Default 30 s, the old client's default. */
+  /** Per attempt. Default 30 s, the same as `@sharp-api/client`. */
   timeoutMs?: number
   /**
-   * Total tries on a network error or a 502/503/504. The stdio entry keeps the
-   * old client's 3; the hosted relay passes 1, so one tool call is exactly one
-   * API call and a relay can never multiply a user's traffic.
+   * Total tries on a network error or a 502/503/504. The stdio entry makes 3,
+   * as `@sharp-api/client` does; the hosted relay passes 1, so one tool call
+   * is exactly one API call and a relay can never multiply a user's traffic.
    */
   attempts?: number
   /** Called once per upstream response that arrived, with its status. */
@@ -81,7 +81,7 @@ export function createApi(opts: ApiOptions) {
   }
 }
 
-// Full-jitter exponential backoff, the old client's schedule: 500 ms base, 4 s cap.
+// Full-jitter exponential backoff, the same schedule as `@sharp-api/client`: 500 ms base, 4 s cap.
 function backoff(attempt: number) {
   const ceiling = Math.min(500 * 2 ** (attempt - 1), 4000)
   return new Promise((r) => setTimeout(r, Math.random() * ceiling))
