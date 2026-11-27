@@ -16,9 +16,8 @@ const apiKey = process.env.SHARPAPI_KEY
 // Reject a key containing control characters before it is ever used as a header
 // value. Node's own `Headers.append` throws on such a value, and its error
 // message QUOTES the value back — which then travels into a tool result and so
-// into the conversation transcript. Caught by an adversarial review that
-// reproduced the leak with a key carrying an embedded CRLF; the realistic
-// trigger is a paste that picked up a trailing newline plus following text.
+// into the conversation transcript. A key pasted with a trailing newline and
+// more text after it is enough to trigger this.
 // (The hosted relay applies a stricter printable-ASCII check: src/hosted.ts.)
 if (apiKey && /[\u0000-\u001f\u007f]/.test(apiKey)) {
   console.error(

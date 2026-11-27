@@ -28,9 +28,8 @@ jobs:
         run: npm run typecheck
       - name: Build
         run: npm run build
-      # Run the suite via `npm test` rather than naming files here. The
-      # enumerated form is how the redactor went untested: a test file that no
-      # step invoked was invisible, and so was the fact that none existed.
+      # Run the suite via `npm test` rather than naming files here, so a new
+      # test file cannot be left out of CI.
       # Covers both stdio handshakes (2025-era and 2026-07-28), the
       # control-character refusal, the redactor, and the HTTP relay's controls.
       - name: Test
