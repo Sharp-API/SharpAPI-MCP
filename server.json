@@ -1,0 +1,45 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Sharp-API/sharpapi-mcp",
+  "title": "SharpAPI",
+  "description": "Live sports betting odds, +EV, arbitrage, middles and betting splits from SharpAPI.",
+  "repository": {
+    "url": "https://github.com/Sharp-API/SharpAPI-MCP",
+    "source": "github"
+  },
+  "websiteUrl": "https://docs.sharpapi.io/en/sdks/mcp",
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@sharp-api/mcp-server",
+      "version": "0.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SHARPAPI_KEY",
+          "description": "Your SharpAPI key. Get a free one at https://sharpapi.io.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.sharpapi.io/mcp",
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "description": "Your SharpAPI key. Get a free one at https://sharpapi.io.",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
